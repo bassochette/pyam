@@ -146,7 +146,7 @@ class ScoringSheet(object):
 			elif combo in HEADS :
 				self._free[combo] = self.__score_head(combo)
 
-		elif combo == 'cross'
+		elif combo == 'cross':
 
 		else :
 			raise NoComboLikeThis
