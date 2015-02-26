@@ -4,11 +4,13 @@
 from yamexcept import *
 from helper import log
 
-COLUMN = ("1", "2", "3", "4", "5", "6","Mini", "Maxi", "Two pairs" , "Brelan" , "Full" , "Carre", "Suite", "Yam" )
+# COLUMN = ("1", "2", "3", "4", "5", "6","Mini", "Maxi", "Two pairs" , "Brelan" , "Full" , "Carre", "Suite", "Yam" )
 POINTS = ('1', '2', '3', '4', '5', '6')
 SUMS = ("Mini", "Maxi")
 HEADS = ("Two pairs" , "Brelan" , "Full" , "Carre", "Suite", "Yam" )
+COLUMN = POINTS + SUMS + HEADS
 BONUS = { 63 : 30, 70 : 40, 80 : 50, 99 : 100}
+
 
 
 class ScoringSheet(object):
@@ -112,7 +114,6 @@ class ScoringSheet(object):
 			raise NoComboLikeThis
 
 
-
 		return self._down
 
 	def free(self, combo, dices = [], pos_to_cross = None):
@@ -127,7 +128,7 @@ class ScoringSheet(object):
 
 			elif combo in SUMS :
 				
-				score = self.__score_sums(combo, dices)
+				score = self.__score_sums(dices)
 
 				if self._free[SUMS[0]] == None and self._free[SUMS[1]] == None :
 					self._free[combo] = score
@@ -147,14 +148,73 @@ class ScoringSheet(object):
 				self._free[combo] = self.__score_head(combo)
 
 		elif combo == 'cross':
+			if self._free[pos_to_cross] != None:
+				raise AlreadyAttributed
+
+			self._free[pos_to_cross] = 0
 
 		else :
 			raise NoComboLikeThis
 
-		return self._free
+		clean_free = {}
+		for k in self._free.keys():
+			if self._free[k] != None:
+				clean_free[k] = self._free[k]
 
-	def straight(self, item):
-		if self._free[combo] != None :
+		return clean_free
+
+	def straight(self, combo, dices = [], pos_to_cross=None):
+		if combo != 'cross' and self._straight[combo] != None :
 			raise AlreadyAttributed
+		elif pos_to_cross != None and self._straight[pos_to_cross] != None :
+			raise AlreadyAttributed
+
+		if combo in COLUMN:
+
+			if self._straight[combo] != None : 
+				raise AlreadyAttributed
+
+			if combo in POINTS :
+				self._straight[combo] = self.__score_points(combo, dices)
+
+			elif combo in SUMS :
+				score = self.__score_sums(dices)
+
+				if self._straight[SUMS[0]] == None and self._straight[SUMS[1]] == None:
+					
+					if self._straight[SUMS[1]] > score :
+						self._straight[combo] = score
+					else :
+						raise MinOrMaxError
+
+				else :
+					if self._straight[SUMS[0]] < score :
+						self._straight[combo] = score
+					else :
+						raise MinOrMaxError
+
+
+			elif combo in HEADS :
+				self._straight[combo] = self.__score_head(combo)
+
+		elif combo == 'cross':
+			self._straight[pos_to_cross] = 0
+
+		else:
+			raise NoComboLikeThis
+
+		cleaned_straight = {}
+		for k in self._straight.keys() :
+			if self._straight[k] != None:
+				cleaned_straight[k] = self._straight[k]
+
+		return cleaned_straight
+
+
+
+
+
+
+
 
 
